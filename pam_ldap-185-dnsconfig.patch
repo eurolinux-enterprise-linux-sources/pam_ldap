@@ -52,7 +52,7 @@
  AC_CACHE_CHECK(whether gethostbyname_r takes 6 arguments, xad_cv_gethostbyname_r_args, [
 --- /dev/null	2004-10-19 17:45:17.794252000 -0400
 +++ pam_ldap-176/dnsconfig.c	2004-10-28 17:32:36.915435096 -0400
-@@ -0,0 +1,214 @@
+@@ -0,0 +1,216 @@
 +
 +/* Copyright (C) 1997-2001 Luke Howard.
 +   This file started off as part of the nss_ldap library.
@@ -187,7 +187,6 @@
 +
 +  /* only reinitialize variables we'll change here */
 +  result->host = NULL;
-+  result->base = NULL;
 +  result->port = LDAP_PORT;
 +#ifdef LDAP_VERSION3
 +  result->version = LDAP_VERSION3;
@@ -253,11 +252,14 @@
 +#endif /* SSL */
 +
 +	  /* DN */
-+	  stat = _pam_ldap_getdnsdn (_res.defdname, &result->base);
-+	  if (stat != PAM_SUCCESS)
++	  if (result->base == NULL)
 +	    {
-+	      dns_free_data (r);
-+	      return stat;
++	      stat = _pam_ldap_getdnsdn (_res.defdname, &result->base);
++	      if (stat != PAM_SUCCESS)
++	        {
++	          dns_free_data (r);
++	          return stat;
++	        }
 +	    }
 +	}
 +    }

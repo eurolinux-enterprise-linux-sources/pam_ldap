@@ -7,7 +7,7 @@
 Summary: PAM module for LDAP
 Name: pam_ldap
 Version: 185
-Release: 8%{?dist}
+Release: 11%{?dist}
 URL: http://www.padl.com/OSS/pam_ldap.html
 License: LGPLv2+
 Group: System Environment/Base
@@ -23,6 +23,7 @@ Patch13: pam_ldap-176-exop-modify.patch
 Patch20: pam_ldap-184-nsrole.patch
 Patch23: pam_ldap-183-releaseconfig.patch
 Patch24: pam_ldap-185-expiration4.patch
+Patch25: pam_ldap-176-authenticateOnChangeExpiredAuthtok.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, libtool
@@ -52,6 +53,7 @@ cp nss_ldap-%{nss_ldap_version}/snprintf.h .
 %patch20 -p1 -b .nsrole
 %patch23 -p1 -b .releaseconfig
 %patch24 -p1 -b .expiration4
+%patch25 -p1 -b .authenticateOnChangeExpiredAuthtok
 sed -i -e 's,^ldap.conf$,%{name}.conf,g' *.5
 sed -i -e 's,^/etc/ldap\.,/etc/%{name}.,g' *.5
 sed -i -e 's,in ldap.conf,in %{name}.conf,g' *.5
@@ -129,6 +131,19 @@ fi
 %attr(0600,root,root) %ghost %config(noreplace) /etc/%{name}.secret
 
 %changelog
+* Thu Sep 15 2011 Nalin Dahyabhai <nalin@redhat.com> 185-11
+- finish fixing #735375
+
+* Mon Sep 12 2011 Nalin Dahyabhai <nalin@redhat.com> 185-10
+- don't overwrite an explicitly-configured search base when we're using DNS
+  to locate the server (#735375)
+
+* Thu Jul 14 2011 Nalin Dahyabhai <nalin@redhat.com> 185-9
+- add Ross Tyler's patch to always require authentication during password
+  change requests for expired passwords, so that modules which check password
+  quality (pam_cracklib) will always have the old password on-hand to examine
+  as well (#688747, upstream #431)
+
 * Wed Feb 16 2011 Nalin Dahyabhai <nalin@redhat.com> 185-8
 - drop the custom linker script, it's not needed
 
