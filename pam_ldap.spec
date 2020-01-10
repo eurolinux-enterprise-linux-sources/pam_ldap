@@ -7,7 +7,7 @@
 Summary: PAM module for LDAP
 Name: pam_ldap
 Version: 185
-Release: 5%{?dist}
+Release: 8%{?dist}
 URL: http://www.padl.com/OSS/pam_ldap.html
 License: LGPLv2+
 Group: System Environment/Base
@@ -22,6 +22,7 @@ Patch7: pam_ldap-182-manpointer.patch
 Patch13: pam_ldap-176-exop-modify.patch
 Patch20: pam_ldap-184-nsrole.patch
 Patch23: pam_ldap-183-releaseconfig.patch
+Patch24: pam_ldap-185-expiration4.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, libtool
@@ -50,6 +51,7 @@ cp nss_ldap-%{nss_ldap_version}/snprintf.h .
 %patch13 -p1 -b .exop-modify
 %patch20 -p1 -b .nsrole
 %patch23 -p1 -b .releaseconfig
+%patch24 -p1 -b .expiration4
 sed -i -e 's,^ldap.conf$,%{name}.conf,g' *.5
 sed -i -e 's,^/etc/ldap\.,/etc/%{name}.,g' *.5
 sed -i -e 's,in ldap.conf,in %{name}.conf,g' *.5
@@ -65,7 +67,7 @@ cp %{_datadir}/libtool/config/config.{sub,guess} .
 %configure --libdir=/%{_lib} \
 	--with-ldap-conf-file=%{_sysconfdir}/%{name}.conf \
 	--with-ldap-secret-file=%{_sysconfdir}/%{name}.secret
-env PATH=`pwd`:"$PATH" make %{?_smp_mflags}
+env PATH=`pwd`:"$PATH" make %{?_smp_mflags} LDFLAGS=-Wl,-z,nodelete
 
 # Check that the module is actually loadable.
 sh %{SOURCE7} -lpam ./pam_ldap.so
@@ -127,6 +129,17 @@ fi
 %attr(0600,root,root) %ghost %config(noreplace) /etc/%{name}.secret
 
 %changelog
+* Wed Feb 16 2011 Nalin Dahyabhai <nalin@redhat.com> 185-8
+- drop the custom linker script, it's not needed
+
+* Wed Feb 16 2011 Nalin Dahyabhai <nalin@redhat.com> 185-7
+- bring forward changes to build with -z nodelete (#677338)
+
+* Tue Jan 25 2011 Nalin Dahyabhai <nalin@redhat.com> 185-6
+- add a proposed patch to avoid losing password expiration warnings relayed
+  via policy controls when expiration is less than a day away (based on
+  patch from Masahiro Matsuya, #637190, upstream #407)
+
 * Thu Mar 23 2010 Nalin Dahyabhai <nalin@redhat.com> 185-5
 - require the pam package explicitly, so that /%%{_lib}/security won't be
   an orphaned directory (part of #553857)
